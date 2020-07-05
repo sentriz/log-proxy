@@ -56,6 +56,9 @@ func (l logTransport) RoundTrip(r *http.Request) (*http.Response, error) {
 	w, err := l.trip.RoundTrip(r)
 	// record response
 	defer func() {
+		if err != nil {
+			return
+		}
 		isBinary := isBinary(w.Header.Get("content-type"))
 		bodyRespRaw, err := httputil.DumpResponse(w, !isBinary)
 		if err != nil {
