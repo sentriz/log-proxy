@@ -49,31 +49,28 @@ type logTransport struct {
 }
 
 func (l logTransport) RoundTrip(r *http.Request) (*http.Response, error) {
-	// record request, should be done before passing to the transport
 	bodyReqRaw, _ := httputil.DumpRequest(r, true)
 	bodyReq := normaliseTrailing(bodyReqRaw)
-	// make the request
+
 	w, err := l.trip.RoundTrip(r)
-	// record response
-	defer func() {
-		if err != nil {
-			return
-		}
-		isBinary := isBinary(w.Header.Get("content-type"))
-		bodyRespRaw, err := httputil.DumpResponse(w, !isBinary)
-		if err != nil {
-			fmt.Println("ok", err)
-		}
-		bodyResp := normaliseTrailing(bodyRespRaw)
-		if isBinary {
-			bodyResp = append(bodyResp, "\n<< BINARY DATA >>\n"...)
-		}
-		seq := atomic.AddUint64(l.seq, 1)
-		fmt.Fprint(l.out, withHeader(seq, "request", bodyReq))
-		fmt.Fprint(l.out, withHeader(seq, "response", bodyResp))
-	}()
-	return w, err
+	if err != nil {
+		return nil, err
+	}
+
+	isBinary := isBinary(w.Header.Get("content-type"))
+	bodyRespRaw, _ := httputil.DumpResponse(w, !isBinary)
+	bodyResp := normaliseTrailing(bodyRespRaw)
+	if isBinary {
+		bodyResp = append(bodyResp, "\nBINARY DATA\n"...)
+	}
+
+	seq := atomic.AddUint64(l.seq, 1)
+	fmt.Fprint(l.out, withHeader(seq, "request", bodyReq))
+	fmt.Fprint(l.out, withHeader(seq, "response", bodyResp))
+	return w, nil
 }
+
+var _ http.RoundTripper = (*logTransport)(nil)
 
 func main() {
 	flagListenAddr := flag.String("listen-addr", "", "address to listen on, eg. :5050")
@@ -89,6 +86,7 @@ func main() {
 	if err != nil {
 		log.Fatalf("error parsing `-to`: %v", err)
 	}
+
 	proxy := httputil.NewSingleHostReverseProxy(flagToURL)
 	proxy.Transport = logTransport{
 		out:  os.Stdout,
@@ -96,6 +94,7 @@ func main() {
 		trip: http.DefaultTransport,
 	}
 	http.Handle("/", proxy)
+
 	log.Printf("listening on %q", *flagListenAddr)
 	if err := http.ListenAndServe(*flagListenAddr, nil); err != nil {
 		log.Fatalf("error starting: %v", err)
