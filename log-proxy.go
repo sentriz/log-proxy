@@ -15,22 +15,14 @@ import (
 )
 
 // https://www.iana.org/assignments/media-types/media-types.xhtml
-var binaryTypes = []string{
-	"image/",
-	"audio/",
-	"video/",
-}
-
 func isBinary(contentType string) bool {
-	if contentType == "" {
+	group := strings.SplitN(contentType, "/", 2)[0]
+	switch group {
+	case "image", "audio", "video":
+		return true
+	default:
 		return false
 	}
-	for _, pre := range binaryTypes {
-		if strings.HasPrefix(contentType, pre) {
-			return true
-		}
-	}
-	return false
 }
 
 func normaliseTrailing(in []byte) []byte {
@@ -93,10 +85,9 @@ func main() {
 		seq:  new(uint64),
 		trip: http.DefaultTransport,
 	}
-	http.Handle("/", proxy)
 
 	log.Printf("listening on %q", *flagListenAddr)
-	if err := http.ListenAndServe(*flagListenAddr, nil); err != nil {
+	if err := http.ListenAndServe(*flagListenAddr, proxy); err != nil {
 		log.Fatalf("error starting: %v", err)
 	}
 }
