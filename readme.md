@@ -2,17 +2,17 @@
 
 a reverse proxy to a single address, logging request and response bodies
 
-###### installation 
+###### installation
 
-`$ go get -u go.senan.xyz/log-proxy`
+`$ go install go.senan.xyz/log-proxy@latest`
 
-###### usage 
+###### usage
 
 ```
   -listen-addr string
-    	address to listen on, eg. :5050
+     address to listen on, eg. :5050
   -to string
-    	address to proxy to, eg. http://localhost:4040
+     address to proxy to, eg. http://localhost:4040
 ```
 
 eg. say I have a service running on my laptop on port 4040. it doesn't log requests and the usual client doesn't log anything
@@ -30,10 +30,10 @@ Host: localhost:4040
 Accept: */*
 User-Agent: curl/7.69.1
 X-Forwarded-For: ::1
-X-Forwarded-Host: 
+X-Forwarded-Host:
 
 ######### (1) response #########
-HTTP/1.1 200 
+HTTP/1.1 200
 Content-Length: 125
 Access-Control-Allow-Origin: *
 Cache-Control: no-cache, no-store, max-age=0, must-revalidate
@@ -54,10 +54,10 @@ Host: localhost:4040
 Accept: */*
 User-Agent: curl/7.69.1
 X-Forwarded-For: ::1
-X-Forwarded-Host: 
+X-Forwarded-Host:
 
 ######### (2) response #########
-HTTP/1.1 200 
+HTTP/1.1 200
 Content-Length: 328
 Access-Control-Allow-Origin: *
 Cache-Control: no-cache, no-store, max-age=0, must-revalidate
@@ -85,10 +85,10 @@ Host: localhost:4040
 Accept: */*
 User-Agent: curl/7.69.1
 X-Forwarded-For: ::1
-X-Forwarded-Host: 
+X-Forwarded-Host:
 
 ######### (3) response #########
-HTTP/1.1 200 
+HTTP/1.1 200
 Content-Length: 125
 Access-Control-Allow-Origin: *
 Cache-Control: no-cache, no-store, max-age=0, must-revalidate
