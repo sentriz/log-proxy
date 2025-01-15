@@ -74,16 +74,21 @@ func main() {
 	if *flagTo == "" {
 		log.Fatalf("please provide `-to`")
 	}
-	flagToURL, err := url.Parse(*flagTo)
+	toURL, err := url.Parse(*flagTo)
 	if err != nil {
 		log.Fatalf("error parsing `-to`: %v", err)
 	}
 
-	proxy := httputil.NewSingleHostReverseProxy(flagToURL)
-	proxy.Transport = logTransport{
-		out:  os.Stdout,
-		seq:  new(uint64),
-		trip: http.DefaultTransport,
+	proxy := &httputil.ReverseProxy{
+		Rewrite: func(r *httputil.ProxyRequest) {
+			r.SetURL(toURL)
+			r.Out.Host = toURL.Host
+		},
+		Transport: logTransport{
+			out:  os.Stdout,
+			seq:  new(uint64),
+			trip: http.DefaultTransport,
+		},
 	}
 
 	log.Printf("listening on %q", *flagListenAddr)
